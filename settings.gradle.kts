@@ -1,0 +1,1 @@
+rootProject.name = "Astashenkova_Hometask3"
