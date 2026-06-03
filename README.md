@@ -33,3 +33,6 @@ my-app/
 - `./gradlew generateTcpServer` (генерує таску з портом 8089) або `./gradlew generateTcpServer -Pport=[номер порту]` (для інших портів)
 - `./gradlew checkPort` (перевіряє порт 8089) або `./gradlew checkPort -Pport=[номер порту]` (для інших портів)
 - `./gradlew packageHometask`
+
+## Приклад використання плагіну в іншому проєкті
+[https://github.com/kastashenkova/java-practice3-plugin-usage](https://github.com/kastashenkova/java-practice3-plugin-usage)
