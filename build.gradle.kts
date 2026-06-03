@@ -23,13 +23,17 @@ tasks.test {
 }
 
 abstract class GenerateTcpServerTask : DefaultTask() {
+    @get:Input
+    val portNumber: Provider<String> = project.providers.gradleProperty("port").orElse("8089")
+
+    @get:OutputFile
+    val outputFile = project.file("src/main/java/org/example/network/TcpServer.java")
+
     @TaskAction
     fun generate() {
-        val dir = project.file("src/main/java/org/example/network")
-        dir.mkdirs()
-        val file = File(dir, "TcpServer.java")
-        if (!file.exists()) {
-            file.writeText("""
+        val resolvedPort = portNumber.get()
+        outputFile.parentFile.mkdirs()
+        outputFile.writeText("""
                 package org.example.network;
 
                 import java.net.ServerSocket;
@@ -37,29 +41,33 @@ abstract class GenerateTcpServerTask : DefaultTask() {
 
                 public class TcpServer {
                      public static void main(String[] args) throws Exception {
-                          try (ServerSocket serverSocket = new ServerSocket(8089)) {
+                          try (ServerSocket serverSocket = new ServerSocket($resolvedPort)) {
                             while (true) {
                                 Socket socket = serverSocket.accept();
                             }
-                          } catch (Exception e) {
+                          } catch (IOException e) {
                             throw new RuntimeException("Error accepting connection", e);
                           }
                     }
                 }
             """.trimIndent())
-        }
     }
 }
 
+@UntrackedTask(because = "Network state is changeable")
 abstract class CheckPortTask : DefaultTask() {
+    @get:Input
+    val portNumber: Provider<String> = project.providers.gradleProperty("port").orElse("8089")
+
     @TaskAction
     fun check() {
+        val port = portNumber.get().toInt()
         try {
-            val serverSocket = ServerSocket(8089)
+            val serverSocket = ServerSocket(port)
             serverSocket.close()
-            println("Port 8089 is available")
+            println("Port $port is available")
         } catch (e: Exception) {
-            println("Port 8089 is in use")
+            println("Port $port is in use")
         }
     }
 }
@@ -67,7 +75,7 @@ abstract class CheckPortTask : DefaultTask() {
 class NetworkPlugin : Plugin<Project> {
     override fun apply(project: Project) {
         project.tasks.register("generateTcpServer", GenerateTcpServerTask::class.java)
-        project.tasks.register("checkDefaultPort", CheckPortTask::class.java)
+        project.tasks.register("checkPort", CheckPortTask::class.java)
     }
 }
 
@@ -75,7 +83,15 @@ apply<NetworkPlugin>()
 
 tasks.register<Zip>("packageHometask") {
     from(projectDir)
-    include("src/**", "build.gradle.kts", "settings.gradle.kts", "README.md")
+    include(
+        "src/**",
+        "build.gradle.kts",
+        "settings.gradle.kts",
+        "README.md",
+        "gradlew",
+        "gradlew.bat",
+        "gradle/**"
+    )
     archiveFileName.set("${project.name}.zip")
     destinationDirectory.set(layout.buildDirectory.dir("archives"))
 }
