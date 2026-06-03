@@ -11,4 +11,4 @@ dependencyResolutionManagement {
     }
 }
 
-rootProject.name = "Astashenkova_Hometask3"
+rootProject.name = "buildSrc"
